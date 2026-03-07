@@ -1,0 +1,319 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/schemas/recommendation.schema.json",
+  "title": "IX Sustainment OS Recommendation",
+  "description": "Assistive recommendation object for IX Sustainment OS Release 1. Recommendations are human-governed, reviewable, attributable, and never silent authority.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "recommendation_id",
+    "case_id",
+    "type",
+    "summary",
+    "rationale",
+    "confidence_label",
+    "approval_required",
+    "status",
+    "generated_at"
+  ],
+  "properties": {
+    "recommendation_id": {
+      "type": "string",
+      "description": "Unique recommendation identifier.",
+      "pattern": "^REC-[0-9]{4}-[0-9]{4,}$",
+      "examples": [
+        "REC-2026-0017"
+      ]
+    },
+    "case_id": {
+      "type": "string",
+      "description": "Identifier of the sustainment case the recommendation belongs to.",
+      "pattern": "^CASE-[0-9]{4}-[0-9]{4,}$",
+      "examples": [
+        "CASE-2026-0001"
+      ]
+    },
+    "type": {
+      "$ref": "#/$defs/recommendation_type"
+    },
+    "summary": {
+      "type": "string",
+      "description": "Short operator-visible summary of the recommendation.",
+      "minLength": 5,
+      "maxLength": 500,
+      "examples": [
+        "Check revision-aligned seal replacement procedure and verify substitute part eligibility."
+      ]
+    },
+    "rationale": {
+      "type": "string",
+      "description": "Human-readable explanation of why the recommendation was produced.",
+      "minLength": 10,
+      "maxLength": 4000,
+      "examples": [
+        "Similar prior cases show recurring seal degradation combined with revision mismatch risk and repeated substitute-part approval delays."
+      ]
+    },
+    "confidence_label": {
+      "$ref": "#/$defs/confidence_label"
+    },
+    "approval_required": {
+      "type": "boolean",
+      "description": "Whether this recommendation requires an approval step before it may influence a protected workflow action."
+    },
+    "status": {
+      "$ref": "#/$defs/recommendation_status"
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "UTC timestamp when the recommendation was created."
+    },
+    "generated_by": {
+      "type": "string",
+      "description": "Model, ruleset, or subsystem that generated the recommendation.",
+      "minLength": 1,
+      "maxLength": 200,
+      "examples": [
+        "ruleset:v0.1"
+      ]
+    },
+    "inputs_used": {
+      "type": "array",
+      "description": "High-level input sources or input classes used to produce the recommendation.",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 200
+      },
+      "maxItems": 50,
+      "uniqueItems": true,
+      "examples": [
+        [
+          "case-summary",
+          "prior-similar-cases",
+          "parts-availability",
+          "procedure-metadata"
+        ]
+      ]
+    },
+    "input_evidence_refs": {
+      "type": "array",
+      "description": "Optional identifiers for evidence events, procedure refs, case artifacts, or other objects materially used during recommendation generation.",
+      "items": {
+        "$ref": "#/$defs/object_ref"
+      },
+      "maxItems": 100
+    },
+    "policy_context": {
+      "type": "string",
+      "description": "Optional policy context that applied at generation or review time.",
+      "maxLength": 1000,
+      "examples": [
+        "role=production-controller; approval_required=true; recommendation_class=procedure-suggestion"
+      ]
+    },
+    "reviewed_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "UTC timestamp of the latest review action, if any."
+    },
+    "reviewed_by": {
+      "$ref": "#/$defs/actor_ref"
+    },
+    "review_disposition_reason": {
+      "type": "string",
+      "description": "Reason entered by the reviewing human when accepting, rejecting, overriding, or deferring.",
+      "maxLength": 4000
+    },
+    "override_summary": {
+      "type": "string",
+      "description": "Operator-provided replacement or override explanation when the recommendation is overridden.",
+      "maxLength": 4000
+    },
+    "approval_id": {
+      "type": "string",
+      "description": "Linked approval identifier when the recommendation required approval.",
+      "pattern": "^APR-[0-9]{4}-[0-9]{4,}$",
+      "examples": [
+        "APR-2026-0042"
+      ]
+    },
+    "expires_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Optional expiration time after which the recommendation should be considered stale for operational use."
+    },
+    "stale": {
+      "type": "boolean",
+      "description": "Whether the recommendation is currently considered stale."
+    },
+    "tags": {
+      "type": "array",
+      "description": "Optional labels for filtering or classification.",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 64
+      },
+      "maxItems": 25,
+      "uniqueItems": true
+    },
+    "review_history": {
+      "type": "array",
+      "description": "Chronological record of review events associated with this recommendation.",
+      "items": {
+        "$ref": "#/$defs/review_event"
+      },
+      "maxItems": 200
+    }
+  },
+  "$defs": {
+    "recommendation_type": {
+      "type": "string",
+      "description": "Classification of recommendation behavior supported in Release 1.",
+      "enum": [
+        "likely-fault-family",
+        "next-evidence",
+        "likely-blocker-cause",
+        "procedure-suggestion",
+        "queue-priority-hint",
+        "similar-case-retrieval"
+      ]
+    },
+    "confidence_label": {
+      "type": "string",
+      "description": "Human-readable confidence or uncertainty indicator for the recommendation.",
+      "enum": [
+        "low",
+        "medium",
+        "high",
+        "uncertain"
+      ]
+    },
+    "recommendation_status": {
+      "type": "string",
+      "description": "Lifecycle status of the recommendation after generation and human review.",
+      "enum": [
+        "pending-review",
+        "accepted",
+        "rejected",
+        "overridden",
+        "deferred"
+      ]
+    },
+    "actor_ref": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "actor_id",
+        "display_name",
+        "role"
+      ],
+      "properties": {
+        "actor_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100,
+          "examples": [
+            "usr-0142"
+          ]
+        },
+        "display_name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120,
+          "examples": [
+            "Jordan Hale"
+          ]
+        },
+        "role": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100,
+          "examples": [
+            "production-controller"
+          ]
+        }
+      }
+    },
+    "object_ref": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "object_type",
+        "object_id"
+      ],
+      "properties": {
+        "object_type": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100,
+          "examples": [
+            "evidence-event"
+          ]
+        },
+        "object_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120,
+          "examples": [
+            "EVT-2026-90210"
+          ]
+        },
+        "summary": {
+          "type": "string",
+          "maxLength": 500
+        }
+      }
+    },
+    "review_event": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "event_id",
+        "disposition",
+        "actor",
+        "occurred_at"
+      ],
+      "properties": {
+        "event_id": {
+          "type": "string",
+          "pattern": "^REV-[0-9]{4}-[0-9]{4,}$",
+          "examples": [
+            "REV-2026-0003"
+          ]
+        },
+        "disposition": {
+          "type": "string",
+          "enum": [
+            "accept",
+            "reject",
+            "override",
+            "defer",
+            "request-approval"
+          ]
+        },
+        "actor": {
+          "$ref": "#/$defs/actor_ref"
+        },
+        "occurred_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "reason": {
+          "type": "string",
+          "maxLength": 4000
+        },
+        "override_summary": {
+          "type": "string",
+          "maxLength": 4000
+        },
+        "approval_id": {
+          "type": "string",
+          "pattern": "^APR-[0-9]{4}-[0-9]{4,}$"
+        }
+      }
+    }
+  }
+}
