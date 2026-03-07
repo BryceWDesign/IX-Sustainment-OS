@@ -1,0 +1,268 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/schemas/approval.schema.json",
+  "title": "IX Sustainment OS Approval",
+  "description": "Approval object for IX Sustainment OS Release 1. Approvals preserve accountable human review for policy-gated or sensitive workflow actions.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "approval_id",
+    "related_object_type",
+    "related_object_id",
+    "requested_action",
+    "requester",
+    "approver_role",
+    "disposition",
+    "requested_at"
+  ],
+  "properties": {
+    "approval_id": {
+      "type": "string",
+      "description": "Unique approval identifier.",
+      "pattern": "^APR-[0-9]{4}-[0-9]{4,}$",
+      "examples": [
+        "APR-2026-0042"
+      ]
+    },
+    "related_object_type": {
+      "type": "string",
+      "description": "Type of object the approval concerns.",
+      "minLength": 1,
+      "maxLength": 100,
+      "examples": [
+        "recommendation"
+      ]
+    },
+    "related_object_id": {
+      "type": "string",
+      "description": "Identifier of the object the approval concerns.",
+      "minLength": 1,
+      "maxLength": 120,
+      "examples": [
+        "REC-2026-0017"
+      ]
+    },
+    "case_id": {
+      "type": "string",
+      "description": "Optional linked case identifier.",
+      "pattern": "^CASE-[0-9]{4}-[0-9]{4,}$",
+      "examples": [
+        "CASE-2026-0001"
+      ]
+    },
+    "requested_action": {
+      "type": "string",
+      "description": "Specific action requiring review.",
+      "minLength": 5,
+      "maxLength": 1000,
+      "examples": [
+        "Approve limited review path for substitute-part workflow."
+      ]
+    },
+    "request_reason": {
+      "type": "string",
+      "description": "Why the approval is being requested.",
+      "minLength": 3,
+      "maxLength": 4000,
+      "examples": [
+        "Restricted workflow branch requires accountable sign-off before advancing the case."
+      ]
+    },
+    "requester": {
+      "$ref": "#/$defs/actor_ref"
+    },
+    "approver": {
+      "$ref": "#/$defs/actor_ref"
+    },
+    "approver_role": {
+      "type": "string",
+      "description": "Role required to make the approval decision.",
+      "minLength": 1,
+      "maxLength": 100,
+      "examples": [
+        "supervisor"
+      ]
+    },
+    "disposition": {
+      "$ref": "#/$defs/approval_disposition"
+    },
+    "requested_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "UTC timestamp when the approval was requested."
+    },
+    "due_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Optional due time for the approval."
+    },
+    "decided_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "UTC timestamp when the latest decision was recorded."
+    },
+    "decision_reason": {
+      "type": "string",
+      "description": "Reason captured by the approver for the current disposition.",
+      "maxLength": 4000,
+      "examples": [
+        "Approved after confirming substitute-path review is required and properly bounded."
+      ]
+    },
+    "status_summary": {
+      "type": "string",
+      "description": "Short operator-visible summary of the approval status.",
+      "maxLength": 500
+    },
+    "policy_context": {
+      "type": "string",
+      "description": "Optional policy context associated with the request or decision.",
+      "maxLength": 1000,
+      "examples": [
+        "role=production-controller; transition=awaiting-approval->actionable; approval_required=true"
+      ]
+    },
+    "evidence_refs": {
+      "type": "array",
+      "description": "References to supporting evidence objects relevant to the approval decision.",
+      "items": {
+        "$ref": "#/$defs/object_ref"
+      },
+      "maxItems": 100
+    },
+    "stale": {
+      "type": "boolean",
+      "description": "Whether the approval is currently considered stale or overdue."
+    },
+    "history": {
+      "type": "array",
+      "description": "Chronological history of approval events for this approval object.",
+      "items": {
+        "$ref": "#/$defs/approval_event"
+      },
+      "maxItems": 250
+    }
+  },
+  "$defs": {
+    "approval_disposition": {
+      "type": "string",
+      "description": "Current decision state of the approval item.",
+      "enum": [
+        "pending",
+        "approved",
+        "rejected",
+        "returned-for-info"
+      ]
+    },
+    "actor_ref": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "actor_id",
+        "display_name",
+        "role"
+      ],
+      "properties": {
+        "actor_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100,
+          "examples": [
+            "usr-0142"
+          ]
+        },
+        "display_name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120,
+          "examples": [
+            "Jordan Hale"
+          ]
+        },
+        "role": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100,
+          "examples": [
+            "production-controller"
+          ]
+        }
+      }
+    },
+    "object_ref": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "object_type",
+        "object_id"
+      ],
+      "properties": {
+        "object_type": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100,
+          "examples": [
+            "evidence-event"
+          ]
+        },
+        "object_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120,
+          "examples": [
+            "EVT-2026-90210"
+          ]
+        },
+        "summary": {
+          "type": "string",
+          "maxLength": 500
+        }
+      }
+    },
+    "approval_event": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "event_id",
+        "event_type",
+        "actor",
+        "occurred_at"
+      ],
+      "properties": {
+        "event_id": {
+          "type": "string",
+          "pattern": "^APREV-[0-9]{4}-[0-9]{4,}$",
+          "examples": [
+            "APREV-2026-0001"
+          ]
+        },
+        "event_type": {
+          "type": "string",
+          "enum": [
+            "approval-requested",
+            "approval-viewed",
+            "approval-approved",
+            "approval-rejected",
+            "approval-returned-for-info",
+            "approval-updated"
+          ]
+        },
+        "actor": {
+          "$ref": "#/$defs/actor_ref"
+        },
+        "occurred_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "reason": {
+          "type": "string",
+          "maxLength": 4000
+        },
+        "summary": {
+          "type": "string",
+          "maxLength": 1000
+        }
+      }
+    }
+  }
+}
