@@ -1,0 +1,1433 @@
+openapi: 3.1.0
+info:
+  title: IX Sustainment OS API
+  version: 0.1.0
+  summary: CUI-conscious sustainment workflow API for case triage, blockers, technical-data access, parts constraints, approvals, and auditable evidence.
+  description: |
+    IX Sustainment OS is a non-weapon, defense-adjacent sustainment operating layer.
+
+    This API is intentionally scoped around the Release 1 product wedge:
+    - case intake
+    - triage and state transitions
+    - blocker visibility
+    - technical-data / procedure association
+    - parts constraint visibility
+    - human-governed recommendation review
+    - approval workflow
+    - durable evidence retrieval
+
+    This specification is designed to show a credible product boundary, not to claim
+    accreditation, certification, or operational approval by default.
+  contact:
+    name: Bryce Lovell
+  license:
+    name: Business Source License 1.1
+    url: ../LICENSE.md
+
+servers:
+  - url: http://localhost:8080
+    description: Local development server
+
+tags:
+  - name: System
+    description: Health, readiness, and version endpoints.
+  - name: Cases
+    description: Sustainment case intake, retrieval, and state management.
+  - name: Blockers
+    description: Blocker updates for sustainment cases.
+  - name: Procedures
+    description: Technical-data and procedure association for cases.
+  - name: Parts
+    description: Parts and supply constraint association for cases.
+  - name: Recommendations
+    description: Assistive recommendations and review actions.
+  - name: Approvals
+    description: Approval request and disposition workflow.
+  - name: Evidence
+    description: Audit and evidence retrieval.
+
+security:
+  - bearerAuth: []
+
+paths:
+  /:
+    get:
+      tags: [System]
+      summary: Get service root information
+      operationId: getRootInfo
+      security: []
+      responses:
+        "200":
+          description: Service metadata
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AppInfo"
+
+  /healthz:
+    get:
+      tags: [System]
+      summary: Get liveness status
+      operationId: getHealth
+      security: []
+      responses:
+        "200":
+          description: Service is alive
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"
+
+  /readyz:
+    get:
+      tags: [System]
+      summary: Get readiness status
+      operationId: getReadiness
+      security: []
+      responses:
+        "200":
+          description: Service is ready
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"
+
+  /version:
+    get:
+      tags: [System]
+      summary: Get service version metadata
+      operationId: getVersion
+      security: []
+      responses:
+        "200":
+          description: Version metadata
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VersionResponse"
+
+  /cases:
+    get:
+      tags: [Cases]
+      summary: List sustainment cases
+      operationId: listCases
+      parameters:
+        - $ref: "#/components/parameters/StateParam"
+        - $ref: "#/components/parameters/SeverityParam"
+        - $ref: "#/components/parameters/PrimaryBlockerParam"
+        - $ref: "#/components/parameters/PriorityParam"
+        - $ref: "#/components/parameters/ApprovalFlagParam"
+        - $ref: "#/components/parameters/RecommendationFlagParam"
+        - $ref: "#/components/parameters/AssetIdParam"
+        - $ref: "#/components/parameters/LimitParam"
+        - $ref: "#/components/parameters/OffsetParam"
+      responses:
+        "200":
+          description: A paged list of cases
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CaseListResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    post:
+      tags: [Cases]
+      summary: Create a new sustainment case
+      operationId: createCase
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateCaseRequest"
+      responses:
+        "201":
+          description: Case created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CaseDetailResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /cases/{caseId}:
+    get:
+      tags: [Cases]
+      summary: Get a single sustainment case
+      operationId: getCase
+      parameters:
+        - $ref: "#/components/parameters/CaseIdPath"
+      responses:
+        "200":
+          description: Full case detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CaseDetailResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /cases/{caseId}/state:
+    post:
+      tags: [Cases]
+      summary: Request a case state transition
+      operationId: transitionCaseState
+      parameters:
+        - $ref: "#/components/parameters/CaseIdPath"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TransitionCaseStateRequest"
+      responses:
+        "200":
+          description: State transition accepted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CaseDetailResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+
+  /cases/{caseId}/blockers:
+    put:
+      tags: [Blockers]
+      summary: Replace or update blockers for a case
+      operationId: updateCaseBlockers
+      parameters:
+        - $ref: "#/components/parameters/CaseIdPath"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateCaseBlockersRequest"
+      responses:
+        "200":
+          description: Blockers updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CaseDetailResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /cases/{caseId}/procedures:
+    post:
+      tags: [Procedures]
+      summary: Associate a procedure reference to a case
+      operationId: addProcedureReferenceToCase
+      parameters:
+        - $ref: "#/components/parameters/CaseIdPath"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AddProcedureReferenceRequest"
+      responses:
+        "201":
+          description: Procedure reference associated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProcedureReferenceResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /cases/{caseId}/part-constraints:
+    post:
+      tags: [Parts]
+      summary: Add a parts or supply constraint to a case
+      operationId: addPartConstraintToCase
+      parameters:
+        - $ref: "#/components/parameters/CaseIdPath"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AddPartConstraintRequest"
+      responses:
+        "201":
+          description: Part constraint associated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PartConstraintResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /cases/{caseId}/recommendations:
+    get:
+      tags: [Recommendations]
+      summary: List recommendations for a case
+      operationId: listCaseRecommendations
+      parameters:
+        - $ref: "#/components/parameters/CaseIdPath"
+      responses:
+        "200":
+          description: Recommendations for the case
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RecommendationListResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /recommendations/{recommendationId}/review:
+    post:
+      tags: [Recommendations]
+      summary: Review a recommendation
+      operationId: reviewRecommendation
+      parameters:
+        - $ref: "#/components/parameters/RecommendationIdPath"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReviewRecommendationRequest"
+      responses:
+        "200":
+          description: Recommendation review recorded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RecommendationResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+
+  /approvals:
+    get:
+      tags: [Approvals]
+      summary: List approval requests
+      operationId: listApprovals
+      parameters:
+        - $ref: "#/components/parameters/ApprovalStatusParam"
+        - $ref: "#/components/parameters/CaseIdQueryParam"
+        - $ref: "#/components/parameters/ApproverRoleParam"
+        - $ref: "#/components/parameters/LimitParam"
+        - $ref: "#/components/parameters/OffsetParam"
+      responses:
+        "200":
+          description: Approval items
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApprovalListResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /approvals/{approvalId}/decision:
+    post:
+      tags: [Approvals]
+      summary: Submit an approval decision
+      operationId: decideApproval
+      parameters:
+        - $ref: "#/components/parameters/ApprovalIdPath"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ApprovalDecisionRequest"
+      responses:
+        "200":
+          description: Approval decision recorded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApprovalResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+
+  /cases/{caseId}/evidence:
+    get:
+      tags: [Evidence]
+      summary: List evidence events for a case
+      operationId: listCaseEvidence
+      parameters:
+        - $ref: "#/components/parameters/CaseIdPath"
+        - $ref: "#/components/parameters/ActionParam"
+        - $ref: "#/components/parameters/ActorParam"
+        - $ref: "#/components/parameters/LimitParam"
+        - $ref: "#/components/parameters/OffsetParam"
+      responses:
+        "200":
+          description: Evidence events for the case
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EvidenceEventListResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    CaseIdPath:
+      name: caseId
+      in: path
+      required: true
+      description: Unique sustainment case identifier.
+      schema:
+        type: string
+        examples: [CASE-2026-0001]
+
+    RecommendationIdPath:
+      name: recommendationId
+      in: path
+      required: true
+      description: Unique recommendation identifier.
+      schema:
+        type: string
+        examples: [REC-2026-0017]
+
+    ApprovalIdPath:
+      name: approvalId
+      in: path
+      required: true
+      description: Unique approval identifier.
+      schema:
+        type: string
+        examples: [APR-2026-0042]
+
+    StateParam:
+      name: state
+      in: query
+      required: false
+      schema:
+        $ref: "#/components/schemas/CaseState"
+
+    SeverityParam:
+      name: severity
+      in: query
+      required: false
+      schema:
+        $ref: "#/components/schemas/Severity"
+
+    PrimaryBlockerParam:
+      name: primary_blocker
+      in: query
+      required: false
+      schema:
+        $ref: "#/components/schemas/BlockerCategory"
+
+    PriorityParam:
+      name: priority
+      in: query
+      required: false
+      schema:
+        $ref: "#/components/schemas/Priority"
+
+    ApprovalFlagParam:
+      name: requires_approval
+      in: query
+      required: false
+      schema:
+        type: boolean
+
+    RecommendationFlagParam:
+      name: has_recommendation
+      in: query
+      required: false
+      schema:
+        type: boolean
+
+    AssetIdParam:
+      name: asset_id
+      in: query
+      required: false
+      schema:
+        type: string
+
+    CaseIdQueryParam:
+      name: case_id
+      in: query
+      required: false
+      schema:
+        type: string
+
+    ApprovalStatusParam:
+      name: status
+      in: query
+      required: false
+      schema:
+        $ref: "#/components/schemas/ApprovalDisposition"
+
+    ApproverRoleParam:
+      name: approver_role
+      in: query
+      required: false
+      schema:
+        type: string
+
+    ActionParam:
+      name: action
+      in: query
+      required: false
+      schema:
+        type: string
+
+    ActorParam:
+      name: actor
+      in: query
+      required: false
+      schema:
+        type: string
+
+    LimitParam:
+      name: limit
+      in: query
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 250
+        default: 50
+
+    OffsetParam:
+      name: offset
+      in: query
+      required: false
+      schema:
+        type: integer
+        minimum: 0
+        default: 0
+
+  responses:
+    BadRequest:
+      description: Request payload or parameters are invalid
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+
+    Unauthorized:
+      description: Authentication is missing or invalid
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+
+    Forbidden:
+      description: Request is not allowed by policy, role, or entitlement
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+
+    NotFound:
+      description: Requested object was not found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+
+    Conflict:
+      description: Request conflicts with current state or approval boundary
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+
+  schemas:
+    AppInfo:
+      type: object
+      additionalProperties: false
+      required:
+        - name
+        - description
+        - version
+        - environment
+        - status
+        - time_utc
+      properties:
+        name:
+          type: string
+          example: IX Sustainment OS
+        description:
+          type: string
+          example: CUI-conscious sustainment operating layer for maintenance, readiness, parts bottlenecks, technical-data access, and auditable AI-assisted decision support.
+        version:
+          type: string
+          example: 0.1.0
+        environment:
+          type: string
+          example: local
+        status:
+          type: string
+          example: running
+        time_utc:
+          type: string
+          format: date-time
+
+    HealthResponse:
+      type: object
+      additionalProperties: false
+      required:
+        - status
+        - service
+        - time_utc
+      properties:
+        status:
+          type: string
+          example: ok
+        service:
+          type: string
+          example: ix-sustainment-os
+        time_utc:
+          type: string
+          format: date-time
+
+    VersionResponse:
+      type: object
+      additionalProperties: false
+      required:
+        - service
+        - version
+        - environment
+        - time_utc
+      properties:
+        service:
+          type: string
+          example: ix-sustainment-os
+        version:
+          type: string
+          example: 0.1.0
+        environment:
+          type: string
+          example: local
+        time_utc:
+          type: string
+          format: date-time
+
+    ErrorResponse:
+      type: object
+      additionalProperties: false
+      required:
+        - error
+      properties:
+        error:
+          type: string
+          example: invalid_state_transition
+        message:
+          type: string
+          example: State transition from awaiting-parts to resolved is not allowed.
+        details:
+          type: object
+          additionalProperties: true
+
+    CaseState:
+      type: string
+      enum:
+        - new
+        - triage
+        - awaiting-data
+        - awaiting-parts
+        - awaiting-approval
+        - actionable
+        - deferred
+        - resolved
+        - closed
+
+    Severity:
+      type: string
+      enum:
+        - low
+        - medium
+        - high
+        - critical
+
+    Priority:
+      type: string
+      enum:
+        - routine
+        - elevated
+        - urgent
+        - critical
+
+    BlockerCategory:
+      type: string
+      enum:
+        - data
+        - procedure
+        - entitlement
+        - parts
+        - tooling
+        - approval
+        - capacity
+        - policy
+
+    RecommendationType:
+      type: string
+      enum:
+        - likely-fault-family
+        - next-evidence
+        - likely-blocker-cause
+        - procedure-suggestion
+        - queue-priority-hint
+        - similar-case-retrieval
+
+    RecommendationStatus:
+      type: string
+      enum:
+        - pending-review
+        - accepted
+        - rejected
+        - overridden
+        - deferred
+
+    ApprovalDisposition:
+      type: string
+      enum:
+        - pending
+        - approved
+        - rejected
+        - returned-for-info
+
+    ConfidenceLabel:
+      type: string
+      enum:
+        - low
+        - medium
+        - high
+        - uncertain
+
+    AccessState:
+      type: string
+      enum:
+        - accessible
+        - restricted
+        - unknown
+        - outdated
+        - conflict
+
+    AvailabilityState:
+      type: string
+      enum:
+        - available
+        - constrained
+        - unavailable
+        - backordered
+        - unknown
+
+    MissionEffect:
+      type: string
+      enum:
+        - none
+        - minor
+        - moderate
+        - major
+        - critical
+
+    ActorRef:
+      type: object
+      additionalProperties: false
+      required:
+        - actor_id
+        - display_name
+        - role
+      properties:
+        actor_id:
+          type: string
+          example: usr-0142
+        display_name:
+          type: string
+          example: Jordan Hale
+        role:
+          type: string
+          example: production-controller
+
+    Asset:
+      type: object
+      additionalProperties: false
+      required:
+        - asset_id
+        - asset_type
+        - tail_or_serial
+        - unit_or_location
+        - status
+        - mission_relevance
+      properties:
+        asset_id:
+          type: string
+          example: AST-00091
+        asset_type:
+          type: string
+          example: support-platform
+        tail_or_serial:
+          type: string
+          example: SN-22914
+        unit_or_location:
+          type: string
+          example: Depot-West
+        status:
+          type: string
+          example: degraded
+        mission_relevance:
+          $ref: "#/components/schemas/MissionEffect"
+
+    Blocker:
+      type: object
+      additionalProperties: false
+      required:
+        - category
+        - summary
+        - is_primary
+      properties:
+        category:
+          $ref: "#/components/schemas/BlockerCategory"
+        summary:
+          type: string
+          example: Required part unavailable with no confirmed substitute.
+        is_primary:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+        created_by:
+          $ref: "#/components/schemas/ActorRef"
+
+    Case:
+      type: object
+      additionalProperties: false
+      required:
+        - case_id
+        - title
+        - description
+        - severity
+        - priority
+        - state
+        - asset_id
+        - mission_effect
+        - created_at
+        - created_by
+        - primary_blocker
+        - blocker_list
+      properties:
+        case_id:
+          type: string
+          example: CASE-2026-0001
+        title:
+          type: string
+          example: Hydraulic pressure loss during post-maintenance verification
+        description:
+          type: string
+          example: Pressure drop observed during verification cycle after routine service.
+        severity:
+          $ref: "#/components/schemas/Severity"
+        priority:
+          $ref: "#/components/schemas/Priority"
+        state:
+          $ref: "#/components/schemas/CaseState"
+        asset_id:
+          type: string
+          example: AST-00091
+        mission_effect:
+          $ref: "#/components/schemas/MissionEffect"
+        created_at:
+          type: string
+          format: date-time
+        created_by:
+          $ref: "#/components/schemas/ActorRef"
+        primary_blocker:
+          $ref: "#/components/schemas/BlockerCategory"
+        blocker_list:
+          type: array
+          items:
+            $ref: "#/components/schemas/Blocker"
+
+    FaultEvent:
+      type: object
+      additionalProperties: false
+      required:
+        - fault_event_id
+        - case_id
+        - type
+        - source
+        - observed_at
+        - notes
+      properties:
+        fault_event_id:
+          type: string
+          example: FE-2026-0030
+        case_id:
+          type: string
+          example: CASE-2026-0001
+        type:
+          type: string
+          example: pressure-loss
+        source:
+          type: string
+          example: maintainer-entry
+        observed_at:
+          type: string
+          format: date-time
+        notes:
+          type: string
+          example: Pressure dropped after second verification cycle.
+
+    ProcedureRef:
+      type: object
+      additionalProperties: false
+      required:
+        - procedure_ref_id
+        - title
+        - reference_code
+        - revision
+        - applicability
+        - access_state
+      properties:
+        procedure_ref_id:
+          type: string
+          example: PROC-1148
+        title:
+          type: string
+          example: Hydraulic Line Verification Procedure
+        reference_code:
+          type: string
+          example: TM-HYD-1148
+        revision:
+          type: string
+          example: Rev C
+        applicability:
+          type: string
+          example: Applies to platform block 2 with subsystem HYD-A.
+        access_state:
+          $ref: "#/components/schemas/AccessState"
+        restricted_reason:
+          type: string
+          example: Role requires elevated entitlement to view full procedure body.
+
+    PartConstraint:
+      type: object
+      additionalProperties: false
+      required:
+        - part_constraint_id
+        - case_id
+        - part_number
+        - nomenclature
+        - availability_state
+        - readiness_impact
+      properties:
+        part_constraint_id:
+          type: string
+          example: PC-0091
+        case_id:
+          type: string
+          example: CASE-2026-0001
+        part_number:
+          type: string
+          example: PN-44-771A
+        nomenclature:
+          type: string
+          example: hydraulic seal assembly
+        availability_state:
+          $ref: "#/components/schemas/AvailabilityState"
+        eta_text:
+          type: string
+          example: ETA unknown
+        readiness_impact:
+          type: string
+          example: Blocks restoration of one mission-relevant asset.
+        alternate_path:
+          type: string
+          example: Substitute under evaluation, approval required.
+
+    Recommendation:
+      type: object
+      additionalProperties: false
+      required:
+        - recommendation_id
+        - case_id
+        - type
+        - summary
+        - rationale
+        - confidence_label
+        - approval_required
+        - status
+        - generated_at
+      properties:
+        recommendation_id:
+          type: string
+          example: REC-2026-0017
+        case_id:
+          type: string
+          example: CASE-2026-0001
+        type:
+          $ref: "#/components/schemas/RecommendationType"
+        summary:
+          type: string
+          example: Check revision-aligned seal replacement procedure and verify substitute part eligibility.
+        rationale:
+          type: string
+          example: Similar cases show recurring seal degradation plus revision mismatch risk.
+        confidence_label:
+          $ref: "#/components/schemas/ConfidenceLabel"
+        approval_required:
+          type: boolean
+        status:
+          $ref: "#/components/schemas/RecommendationStatus"
+        generated_at:
+          type: string
+          format: date-time
+        generated_by:
+          type: string
+          example: ruleset:v0.1
+        inputs_used:
+          type: array
+          items:
+            type: string
+          example:
+            - case-summary
+            - prior-similar-cases
+            - parts-availability
+            - procedure-metadata
+
+    Approval:
+      type: object
+      additionalProperties: false
+      required:
+        - approval_id
+        - related_object_type
+        - related_object_id
+        - requested_action
+        - requester
+        - approver_role
+        - disposition
+      properties:
+        approval_id:
+          type: string
+          example: APR-2026-0042
+        related_object_type:
+          type: string
+          example: recommendation
+        related_object_id:
+          type: string
+          example: REC-2026-0017
+        requested_action:
+          type: string
+          example: Approve limited review path for substitute-part workflow.
+        requester:
+          $ref: "#/components/schemas/ActorRef"
+        approver:
+          $ref: "#/components/schemas/ActorRef"
+        approver_role:
+          type: string
+          example: supervisor
+        disposition:
+          $ref: "#/components/schemas/ApprovalDisposition"
+        reason:
+          type: string
+          example: Restricted workflow branch requires accountable sign-off.
+        decided_at:
+          type: string
+          format: date-time
+        due_at:
+          type: string
+          format: date-time
+
+    EvidenceEvent:
+      type: object
+      additionalProperties: false
+      required:
+        - event_id
+        - object_type
+        - object_id
+        - action
+        - actor
+        - occurred_at
+        - summary
+      properties:
+        event_id:
+          type: string
+          example: EVT-2026-90210
+        object_type:
+          type: string
+          example: case
+        object_id:
+          type: string
+          example: CASE-2026-0001
+        action:
+          type: string
+          example: case.state_changed
+        actor:
+          $ref: "#/components/schemas/ActorRef"
+        occurred_at:
+          type: string
+          format: date-time
+        summary:
+          type: string
+          example: Case moved from triage to awaiting-parts.
+        policy_context:
+          type: string
+          example: role=production-controller; approval_required=false
+        before_state:
+          type: string
+          example: triage
+        after_state:
+          type: string
+          example: awaiting-parts
+
+    CreateCaseRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - title
+        - description
+        - severity
+        - asset_id
+        - mission_effect
+        - reported_condition
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        severity:
+          $ref: "#/components/schemas/Severity"
+        asset_id:
+          type: string
+        mission_effect:
+          $ref: "#/components/schemas/MissionEffect"
+        reported_condition:
+          type: string
+        subsystem_area:
+          type: string
+        urgency_note:
+          type: string
+        attachments:
+          type: array
+          items:
+            type: string
+
+    TransitionCaseStateRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - target_state
+        - reason
+      properties:
+        target_state:
+          $ref: "#/components/schemas/CaseState"
+        reason:
+          type: string
+          example: Required material constraint identified during triage.
+        approval_id:
+          type: string
+          example: APR-2026-0042
+
+    UpdateCaseBlockersRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - blockers
+      properties:
+        blockers:
+          type: array
+          minItems: 1
+          items:
+            $ref: "#/components/schemas/BlockerInput"
+
+    BlockerInput:
+      type: object
+      additionalProperties: false
+      required:
+        - category
+        - summary
+        - is_primary
+      properties:
+        category:
+          $ref: "#/components/schemas/BlockerCategory"
+        summary:
+          type: string
+        is_primary:
+          type: boolean
+
+    AddProcedureReferenceRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - title
+        - reference_code
+        - revision
+        - applicability
+        - access_state
+      properties:
+        title:
+          type: string
+        reference_code:
+          type: string
+        revision:
+          type: string
+        applicability:
+          type: string
+        access_state:
+          $ref: "#/components/schemas/AccessState"
+        restricted_reason:
+          type: string
+
+    AddPartConstraintRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - part_number
+        - nomenclature
+        - availability_state
+        - readiness_impact
+      properties:
+        part_number:
+          type: string
+        nomenclature:
+          type: string
+        availability_state:
+          $ref: "#/components/schemas/AvailabilityState"
+        eta_text:
+          type: string
+        alternate_path:
+          type: string
+        readiness_impact:
+          type: string
+
+    ReviewRecommendationRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - disposition
+        - reason
+      properties:
+        disposition:
+          type: string
+          enum:
+            - accept
+            - reject
+            - override
+            - defer
+            - request-approval
+        reason:
+          type: string
+        approval_id:
+          type: string
+        override_summary:
+          type: string
+
+    ApprovalDecisionRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - disposition
+        - reason
+      properties:
+        disposition:
+          type: string
+          enum:
+            - approved
+            - rejected
+            - returned-for-info
+        reason:
+          type: string
+
+    CaseListResponse:
+      type: object
+      additionalProperties: false
+      required:
+        - items
+        - total
+        - limit
+        - offset
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/Case"
+        total:
+          type: integer
+          example: 2
+        limit:
+          type: integer
+          example: 50
+        offset:
+          type: integer
+          example: 0
+
+    CaseDetailResponse:
+      type: object
+      additionalProperties: false
+      required:
+        - case
+      properties:
+        case:
+          $ref: "#/components/schemas/Case"
+        asset:
+          $ref: "#/components/schemas/Asset"
+        fault_events:
+          type: array
+          items:
+            $ref: "#/components/schemas/FaultEvent"
+        procedures:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProcedureRef"
+        part_constraints:
+          type: array
+          items:
+            $ref: "#/components/schemas/PartConstraint"
+        recommendations:
+          type: array
+          items:
+            $ref: "#/components/schemas/Recommendation"
+        approvals:
+          type: array
+          items:
+            $ref: "#/components/schemas/Approval"
+
+    ProcedureReferenceResponse:
+      type: object
+      additionalProperties: false
+      required:
+        - procedure
+      properties:
+        procedure:
+          $ref: "#/components/schemas/ProcedureRef"
+
+    PartConstraintResponse:
+      type: object
+      additionalProperties: false
+      required:
+        - part_constraint
+      properties:
+        part_constraint:
+          $ref: "#/components/schemas/PartConstraint"
+
+    RecommendationResponse:
+      type: object
+      additionalProperties: false
+      required:
+        - recommendation
+      properties:
+        recommendation:
+          $ref: "#/components/schemas/Recommendation"
+
+    RecommendationListResponse:
+      type: object
+      additionalProperties: false
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/Recommendation"
+
+    ApprovalResponse:
+      type: object
+      additionalProperties: false
+      required:
+        - approval
+      properties:
+        approval:
+          $ref: "#/components/schemas/Approval"
+
+    ApprovalListResponse:
+      type: object
+      additionalProperties: false
+      required:
+        - items
+        - total
+        - limit
+        - offset
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/Approval"
+        total:
+          type: integer
+          example: 1
+        limit:
+          type: integer
+          example: 50
+        offset:
+          type: integer
+          example: 0
+
+    EvidenceEventListResponse:
+      type: object
+      additionalProperties: false
+      required:
+        - items
+        - total
+        - limit
+        - offset
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/EvidenceEvent"
+        total:
+          type: integer
+          example: 5
+        limit:
+          type: integer
+          example: 50
+        offset:
+          type: integer
+          example: 0
