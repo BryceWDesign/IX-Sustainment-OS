@@ -1,0 +1,196 @@
+# =========================
+# IX Sustainment OS
+# Repository-wide ignore rules
+# =========================
+
+# -------------------------------------------------
+# OS / editor noise
+# -------------------------------------------------
+.DS_Store
+Thumbs.db
+Desktop.ini
+*.swp
+*.swo
+*.tmp
+*.temp
+*.bak
+*.orig
+*.rej
+.vscode/
+.idea/
+
+# -------------------------------------------------
+# Environment and local secrets
+# -------------------------------------------------
+.env
+.env.*
+!.env.example
+*.local
+*.secret
+*.secrets
+secrets/
+local-secrets/
+credentials/
+*.pem
+*.key
+*.p12
+*.pfx
+*.crt
+*.cer
+
+# -------------------------------------------------
+# Logs and runtime artifacts
+# -------------------------------------------------
+logs/
+*.log
+*.out
+*.err
+*.pid
+*.pid.lock
+*.seed
+*.stackdump
+coverage.out
+coverage/
+profile.out
+*.test
+
+# -------------------------------------------------
+# Go build outputs
+# -------------------------------------------------
+bin/
+dist/
+build/
+out/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.a
+
+# -------------------------------------------------
+# Go workspace and vendor edge cases
+# -------------------------------------------------
+go.work
+go.work.sum
+
+# Keep vendor ignored by default unless explicitly committed later
+vendor/
+
+# -------------------------------------------------
+# Node / frontend artifacts
+# -------------------------------------------------
+node_modules/
+.npm/
+.pnpm-store/
+.pnp/
+.pnp.js
+.yarn/
+.yarn-cache/
+.yarnrc.yml
+.next/
+.nuxt/
+.svelte-kit/
+.parcel-cache/
+storybook-static/
+web/dist/
+web/build/
+web/.cache/
+web/.vite/
+web/.turbo/
+*.tsbuildinfo
+
+# -------------------------------------------------
+# Test outputs
+# -------------------------------------------------
+test-results/
+playwright-report/
+coverage-final.json
+junit.xml
+
+# -------------------------------------------------
+# Python incidental artifacts
+# -------------------------------------------------
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+
+# -------------------------------------------------
+# Terraform / infra incidental artifacts
+# -------------------------------------------------
+.terraform/
+.terraform.lock.hcl
+*.tfstate
+*.tfstate.*
+crash.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# -------------------------------------------------
+# Containers / local orchestration
+# -------------------------------------------------
+docker-compose.override.yml
+
+# -------------------------------------------------
+# Archive / package outputs
+# -------------------------------------------------
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+*.7z
+*.rar
+
+# -------------------------------------------------
+# Database / local storage
+# -------------------------------------------------
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+data/
+tmp/
+.cache/
+
+# -------------------------------------------------
+# Generated docs / screenshots / exports
+# -------------------------------------------------
+demo/exports/
+demo/generated/
+demo/screenshots/*.tmp
+docs/generated/
+site/
+
+# -------------------------------------------------
+# Security scanning outputs
+# -------------------------------------------------
+.sarif/
+*.sarif
+sbom/
+bom/
+
+# -------------------------------------------------
+# Local policy / entitlement mock data
+# Keep example fixtures if intentionally added elsewhere.
+# -------------------------------------------------
+internal/**/fixtures/local/
+demo/fixtures/local/
+
+# -------------------------------------------------
+# GitHub / CI scratch
+# -------------------------------------------------
+.github/.cache/
+
+# -------------------------------------------------
+# Explicit keep rules
+# -------------------------------------------------
+!.gitkeep
