@@ -18,19 +18,19 @@ var allowedTransitions = map[domain.CaseState]map[domain.CaseState]struct{}{
 		domain.CaseStateDeferred:         {},
 	},
 	domain.CaseStateAwaitingData: {
-		domain.CaseStateTriage:     {},
+		domain.CaseStateTriage:    {},
 		domain.CaseStateActionable: {},
-		domain.CaseStateDeferred:   {},
+		domain.CaseStateDeferred:  {},
 	},
 	domain.CaseStateAwaitingParts: {
-		domain.CaseStateTriage:     {},
+		domain.CaseStateTriage:    {},
 		domain.CaseStateActionable: {},
-		domain.CaseStateDeferred:   {},
+		domain.CaseStateDeferred:  {},
 	},
 	domain.CaseStateAwaitingApproval: {
 		domain.CaseStateActionable: {},
-		domain.CaseStateTriage:     {},
-		domain.CaseStateDeferred:   {},
+		domain.CaseStateTriage:    {},
+		domain.CaseStateDeferred:  {},
 	},
 	domain.CaseStateActionable: {
 		domain.CaseStateResolved: {},
