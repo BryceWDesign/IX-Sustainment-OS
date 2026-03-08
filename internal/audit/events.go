@@ -307,10 +307,10 @@ func (s *Service) NewApprovalRequestedEvent(
 		withRelatedObject(approval.RelatedObjectType, approval.RelatedObjectID, ""),
 		withRelatedObject("case", approval.CaseID, ""),
 		withApprovalContext(domain.ApprovalContext{
-			ApprovalID:        approval.ApprovalID,
-			RequestedAction:   approval.RequestedAction,
-			DispositionAfter:  approval.Disposition,
-			ApproverRole:      approval.ApproverRole,
+			ApprovalID:       approval.ApprovalID,
+			RequestedAction:  approval.RequestedAction,
+			DispositionAfter: approval.Disposition,
+			ApproverRole:     approval.ApproverRole,
 		}),
 	)
 }
