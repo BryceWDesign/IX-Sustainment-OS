@@ -22,7 +22,7 @@ info:
     name: Bryce Lovell
   license:
     name: Business Source License 1.1
-    url: ../LICENSE.md
+    url: ../LICENSE
 
 servers:
   - url: http://localhost:8080
