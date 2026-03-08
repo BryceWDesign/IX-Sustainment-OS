@@ -32,14 +32,14 @@ const (
 )
 
 type GuardInput struct {
-	ActorRole                 string
-	Action                    Action
-	CurrentState              domain.CaseState
-	TargetState               domain.CaseState
-	RecommendationStatus      domain.RecommendationStatus
+	ActorRole                   string
+	Action                      Action
+	CurrentState                domain.CaseState
+	TargetState                 domain.CaseState
+	RecommendationStatus        domain.RecommendationStatus
 	RecommendationNeedsApproval bool
-	RestrictedProcedure       bool
-	OverrideRequested         bool
+	RestrictedProcedure         bool
+	OverrideRequested           bool
 }
 
 type Decision struct {
@@ -70,11 +70,11 @@ var roleCapabilities = map[string]map[Action]struct{}{
 		ActionEvidenceView:      {},
 	},
 	RoleSustainmentEngineer: {
-		ActionCaseView:          {},
-		ActionProcedureLink:     {},
-		ActionBlockerUpdate:     {},
-		ActionApprovalRequest:   {},
-		ActionEvidenceView:      {},
+		ActionCaseView:        {},
+		ActionProcedureLink:   {},
+		ActionBlockerUpdate:   {},
+		ActionApprovalRequest: {},
+		ActionEvidenceView:    {},
 	},
 	RoleSupervisor: {
 		ActionCaseView:             {},
@@ -88,9 +88,9 @@ var roleCapabilities = map[string]map[Action]struct{}{
 		ActionEvidenceView:         {},
 	},
 	RolePolicyReviewer: {
-		ActionCaseView:        {},
-		ActionApprovalDecide:  {},
-		ActionEvidenceView:    {},
+		ActionCaseView:             {},
+		ActionApprovalDecide:       {},
+		ActionEvidenceView:         {},
 		ActionRecommendationReview: {},
 	},
 	RoleAdministrator: {
