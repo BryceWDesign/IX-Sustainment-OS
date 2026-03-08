@@ -1,0 +1,21 @@
+{
+  "name": "ix-sustainment-os-web",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Frontend for IX Sustainment OS — operator-grade sustainment workflow UI.",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0 --port 4173",
+    "build": "vite build",
+    "preview": "vite preview --host 0.0.0.0 --port 4173",
+    "test": "node -e \"console.log('frontend smoke: no dedicated tests yet')\""
+  },
+  "dependencies": {
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.4.1",
+    "vite": "^7.1.3"
+  }
+}
