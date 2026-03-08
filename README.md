@@ -341,7 +341,7 @@ This repository will be completed in a staged manner across focused commits that
 ```text
 IX-Sustainment-OS/
 ├── README.md
-├── LICENSE.md
+├── LICENSE
 ├── COMMERCIAL_TERMS.md
 ├── .gitignore
 ├── Makefile
