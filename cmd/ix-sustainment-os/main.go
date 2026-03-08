@@ -4,11 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
 	"os/signal"
-	"slices"
 	"strings"
 	"syscall"
 	"time"
@@ -53,13 +53,13 @@ type caseListResponse struct {
 }
 
 type caseDetailResponse struct {
-	Case            domain.Case            `json:"case"`
-	Asset           domain.Asset           `json:"asset"`
-	FaultEvents     []domain.FaultEvent    `json:"fault_events,omitempty"`
-	Procedures      []domain.ProcedureRef  `json:"procedures,omitempty"`
+	Case            domain.Case             `json:"case"`
+	Asset           domain.Asset            `json:"asset"`
+	FaultEvents     []domain.FaultEvent     `json:"fault_events,omitempty"`
+	Procedures      []domain.ProcedureRef   `json:"procedures,omitempty"`
 	PartConstraints []domain.PartConstraint `json:"part_constraints,omitempty"`
 	Recommendations []domain.Recommendation `json:"recommendations,omitempty"`
-	Approvals       []domain.Approval      `json:"approvals,omitempty"`
+	Approvals       []domain.Approval       `json:"approvals,omitempty"`
 }
 
 type recommendationListResponse struct {
@@ -647,54 +647,54 @@ func seedDemoStore() *demoStore {
 	}
 
 	procedureB := domain.ProcedureRef{
-		ProcedureRefID: "PROC-2207",
-		Title:          "Actuator Inspection Procedure",
-		ReferenceCode:  "TM-ACT-2207",
-		Revision:       "Rev F",
-		Applicability:  "Applies to actuator family ACT-2.",
-		AccessState:    domain.AccessStateConflict,
+		ProcedureRefID:  "PROC-2207",
+		Title:           "Actuator Inspection Procedure",
+		ReferenceCode:   "TM-ACT-2207",
+		Revision:        "Rev F",
+		Applicability:   "Applies to actuator family ACT-2.",
+		AccessState:     domain.AccessStateConflict,
 		RestrictedReason: "Index indicates Rev F while local packet references Rev E.",
 	}
 
 	partConstraintA := domain.PartConstraint{
-		PartConstraintID: "PC-0091",
-		CaseID:           caseA.CaseID,
-		PartNumber:       "PN-44-771A",
-		Nomenclature:     "hydraulic seal assembly",
+		PartConstraintID:  "PC-0091",
+		CaseID:            caseA.CaseID,
+		PartNumber:        "PN-44-771A",
+		Nomenclature:      "hydraulic seal assembly",
 		AvailabilityState: domain.AvailabilityStateUnavailable,
-		ETAText:          "ETA unknown",
-		ReadinessImpact:  "Blocks restoration of one mission-relevant asset.",
-		AlternatePath:    "Substitute under evaluation, approval required.",
+		ETAText:           "ETA unknown",
+		ReadinessImpact:   "Blocks restoration of one mission-relevant asset.",
+		AlternatePath:     "Substitute under evaluation, approval required.",
 	}
 
 	recommendationA := domain.Recommendation{
-		RecommendationID:      "REC-2026-0017",
-		CaseID:                caseA.CaseID,
-		Type:                  domain.RecommendationTypeProcedureSuggestion,
-		Summary:               "Check revision-aligned seal replacement procedure and verify substitute part eligibility.",
-		Rationale:             "Similar prior cases show recurring seal degradation plus revision mismatch risk when substitute-path review is delayed.",
-		ConfidenceLabel:       domain.ConfidenceLabelMedium,
-		ApprovalRequired:      true,
-		Status:                domain.RecommendationStatusPendingReview,
-		GeneratedAt:           now.Add(-6 * time.Hour),
-		GeneratedBy:           "ruleset:v0.1",
-		InputsUsed:            []string{"case-summary", "prior-similar-cases", "parts-availability", "procedure-metadata"},
-		PolicyContext:         "role=production-controller; approval_required=true; recommendation_class=procedure-suggestion",
+		RecommendationID: "REC-2026-0017",
+		CaseID:           caseA.CaseID,
+		Type:             domain.RecommendationTypeProcedureSuggestion,
+		Summary:          "Check revision-aligned seal replacement procedure and verify substitute part eligibility.",
+		Rationale:        "Similar prior cases show recurring seal degradation plus revision mismatch risk when substitute-path review is delayed.",
+		ConfidenceLabel:  domain.ConfidenceLabelMedium,
+		ApprovalRequired: true,
+		Status:           domain.RecommendationStatusPendingReview,
+		GeneratedAt:      now.Add(-6 * time.Hour),
+		GeneratedBy:      "ruleset:v0.1",
+		InputsUsed:       []string{"case-summary", "prior-similar-cases", "parts-availability", "procedure-metadata"},
+		PolicyContext:    "role=production-controller; approval_required=true; recommendation_class=procedure-suggestion",
 	}
 
 	recommendationB := domain.Recommendation{
-		RecommendationID:      "REC-2026-0018",
-		CaseID:                caseB.CaseID,
-		Type:                  domain.RecommendationTypeNextEvidence,
-		Summary:               "Request revision-authoritative procedure packet and compare local reference lineage before continuing inspection.",
-		Rationale:             "Current issue is primarily a data and procedure conflict, not a confirmed hardware fault.",
-		ConfidenceLabel:       domain.ConfidenceLabelHigh,
-		ApprovalRequired:      false,
-		Status:                domain.RecommendationStatusPendingReview,
-		GeneratedAt:           now.Add(-10 * time.Hour),
-		GeneratedBy:           "ruleset:v0.1",
-		InputsUsed:            []string{"case-summary", "procedure-index", "local-reference-metadata"},
-		PolicyContext:         "role=production-controller; approval_required=false; recommendation_class=next-evidence",
+		RecommendationID: "REC-2026-0018",
+		CaseID:           caseB.CaseID,
+		Type:             domain.RecommendationTypeNextEvidence,
+		Summary:          "Request revision-authoritative procedure packet and compare local reference lineage before continuing inspection.",
+		Rationale:        "Current issue is primarily a data and procedure conflict, not a confirmed hardware fault.",
+		ConfidenceLabel:  domain.ConfidenceLabelHigh,
+		ApprovalRequired: false,
+		Status:           domain.RecommendationStatusPendingReview,
+		GeneratedAt:      now.Add(-10 * time.Hour),
+		GeneratedBy:      "ruleset:v0.1",
+		InputsUsed:       []string{"case-summary", "procedure-index", "local-reference-metadata"},
+		PolicyContext:    "role=production-controller; approval_required=false; recommendation_class=next-evidence",
 	}
 
 	approvalA := domain.Approval{
@@ -765,13 +765,13 @@ func seedDemoStore() *demoStore {
 			},
 		},
 		{
-			EventID:    "EVT-2026-000005",
-			ObjectType: "case",
-			ObjectID:   caseA.CaseID,
-			Action:     "case.state_changed",
-			Actor:      productionController,
-			OccurredAt: now.Add(-4 * time.Hour),
-			Summary:    "Case moved from triage to awaiting-approval.",
+			EventID:     "EVT-2026-000005",
+			ObjectType:  "case",
+			ObjectID:    caseA.CaseID,
+			Action:      "case.state_changed",
+			Actor:       productionController,
+			OccurredAt:  now.Add(-4 * time.Hour),
+			Summary:     "Case moved from triage to awaiting-approval.",
 			BeforeState: "triage",
 			AfterState:  "awaiting-approval",
 			Integrity: &domain.IntegrityContext{
@@ -819,13 +819,13 @@ func seedDemoStore() *demoStore {
 			},
 		},
 		{
-			EventID:    "EVT-2026-000009",
-			ObjectType: "case",
-			ObjectID:   caseB.CaseID,
-			Action:     "case.state_changed",
-			Actor:      productionController,
-			OccurredAt: now.Add(-10 * time.Hour),
-			Summary:    "Case moved from triage to awaiting-data.",
+			EventID:     "EVT-2026-000009",
+			ObjectType:  "case",
+			ObjectID:    caseB.CaseID,
+			Action:      "case.state_changed",
+			Actor:       productionController,
+			OccurredAt:  now.Add(-10 * time.Hour),
+			Summary:     "Case moved from triage to awaiting-data.",
 			BeforeState: "triage",
 			AfterState:  "awaiting-data",
 			Integrity: &domain.IntegrityContext{
